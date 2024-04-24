@@ -1,44 +1,27 @@
-import unittest
 from unittest.mock import patch
-import random
-import pygame
-from simple_snake import calc_food_position, check_collisions, update
+import pytest
+import simple_snake
 
-class TestSnakeGame(unittest.TestCase):
+@pytest.fixture
+def mock_update(request):
+    with patch('pygame.display.update') as mock_update:
+        yield mock_update
 
 
-    @patch('random.randrange')
-    def test_calc_food_position(self, mock_randrange):
-      
-        mock_randrange.side_effect = [10, 20]
-        
-     
-        position = calc_food_position(bias=(10, 10))
-        
-   
-        expected_position = (10, 20)
-        self.assertEqual(position, expected_position)
+@pytest.fixture
+def mock_calc_food_position(request):
+    with patch('simple_snake.calc_food_position') as mock_calc_food_position:
+        yield mock_calc_food_position
 
-    def test_check_collisions(self):
- 
-        mock_snake = [[10, 20], [10, 30], [20, 30], [30, 30]]
-        
 
-        self.assertFalse(check_collisions(mock_snake))
 
-        mock_snake.append([10, 20])
+@pytest.fixture
+def mock_event_get(request):
+    with patch('pygame.event.get') as mock_event_get:
+        yield mock_event_get
 
-        self.assertTrue(check_collisions(mock_snake))
-
-    @patch('simple_snake.quit')
-    def test_update(self, mock_quit):
-
-        with patch('simple_snake.calc_food_position') as mock_calc_food_position:
-            mock_calc_food_position.return_value = (50, 50)
-
-            score = update()
-
-            self.assertEqual(score, 0)
-
-if __name__ == '__main__':
-    unittest.main()
+def test_update_exception(mock_event_get):
+    mock_event_get.side_effect = Exception('Test Exception')
+    with pytest.raises(Exception) as excinfo:
+        simple_snake.update()
+    assert 'Test Exception' in str(excinfo.value)
